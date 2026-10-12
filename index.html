@@ -428,8 +428,6 @@ async function apiGet(){
     throw e;
   }
 }
-  return r.json();
-}
 async function apiSave(teams, matches){
   const r = await fetch(`${API}/api/state`,{
     method:'PUT',
@@ -894,9 +892,6 @@ async function init(){
 document.getElementById('canvas').addEventListener('scroll',()=>drawConn(),{passive:true});
 window.addEventListener('resize',()=>render());
 init();
+</script>
 </body>
 </html>
-
-::-webkit-scrollbar{width:4px;height:4px}
-::-webkit-scrollbar-track{background:transparent}
-::-webkit-scrollbar-thumb{background:rgba(255,255,255,.07);border-radius:99px}
