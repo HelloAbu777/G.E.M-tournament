@@ -90,7 +90,35 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--t
 .btn-g:hover{border-color:rgba(74,184,122,.3);color:var(--green)}
 
 /* ─── Canvas ─── */
-#canvas{position:relative;z-index:1;flex:1;overflow:auto;padding:28px 32px 40px;min-height:0}
+#canvas{position:relative;z-index:1;flex:1;overflow:auto;padding:28px 32px 40px;min-height:0;touch-action:pan-x pan-y}
+
+/* ─── Pinch-zoom wrapper ─── */
+#zoom-wrap{
+  transform-origin:0 0;
+  transition:transform .05s linear;
+  width:max-content;
+}
+
+/* ─── Responsive header ─── */
+@media(max-width:768px){
+  .hdr{padding:0 12px;gap:8px;height:48px;flex-wrap:nowrap;overflow:hidden}
+  .bsub,.hs,.sep:nth-child(3),.sep:nth-child(5){display:none}
+  .hr{gap:5px;flex-shrink:0}
+  .pill{font-size:.5rem;padding:2px 6px}
+  .btn span,.btn-label{display:none}
+  .btn{width:28px;height:28px;padding:0;justify-content:center}
+  .btn svg{width:13px;height:13px}
+  .admin-badge{font-size:.5rem;padding:2px 6px}
+  .conn-status{display:none}
+  #canvas{padding:16px 14px 24px}
+  .stats{padding:0 12px;gap:14px}
+  .stat .sl{display:none}
+}
+@media(max-width:480px){
+  .hdr{height:44px}
+  .bname{font-size:.78rem}
+  .ht{font-size:.68rem}
+}
 
 /* ─── Root bracket layout ─── */
 /*
@@ -344,13 +372,13 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--t
     <span class="pill pg" id="sbadge">Pre-Round</span>
     <div class="sep"></div>
     <button class="btn btn-r" onclick="resetAll()">
-      <svg viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.95"/></svg>Reset
+      <svg viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.95"/></svg><span class="btn-label">Reset</span>
     </button>
     <button class="btn btn-g" onclick="doExport()">
-      <svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Eksport
+      <svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><span class="btn-label">Eksport</span>
     </button>
     <button class="btn" onclick="openAuthModal()" id="admin-login-btn">
-      <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Admin
+      <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><span class="btn-label">Admin</span>
     </button>
     <span class="admin-badge" id="admin-badge">
       <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Admin
@@ -361,7 +389,7 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--t
   </div>
 </header>
 
-<div id="canvas"><div id="bracket"></div></div>
+<div id="canvas"><div id="zoom-wrap"><div id="bracket"></div></div></div>
 
 <div class="stats">
   <div class="stat"><div class="sdot" style="background:var(--sky)"></div><span class="sl">Jami:</span><span class="sv" id="s-t">—</span></div>
@@ -758,6 +786,7 @@ function drawConn(){
   const old=document.getElementById('svg-conn'); if(old) old.remove();
   const canvas=document.getElementById('canvas');
   const br=document.getElementById('bracket');
+  const wrap=document.getElementById('zoom-wrap');
   const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
   svg.id='svg-conn';
   svg.style.cssText='position:absolute;inset:0;pointer-events:none;overflow:visible;z-index:0';
@@ -895,6 +924,78 @@ async function init(){
 
 document.getElementById('canvas').addEventListener('scroll',()=>drawConn(),{passive:true});
 window.addEventListener('resize',()=>render());
+
+/* ── Pinch-to-zoom ── */
+(function(){
+  const canvas = document.getElementById('canvas');
+  const wrap   = document.getElementById('zoom-wrap');
+  let scale = 1, minScale = 0.25, maxScale = 3;
+  let lastDist = null;
+  let originX = 0, originY = 0;
+
+  function getCenter(t){
+    const a = t[0], b = t[1];
+    return {
+      x: (a.clientX + b.clientX) / 2,
+      y: (a.clientY + b.clientY) / 2
+    };
+  }
+  function getDist(t){
+    const dx = t[0].clientX - t[1].clientX;
+    const dy = t[0].clientY - t[1].clientY;
+    return Math.sqrt(dx*dx + dy*dy);
+  }
+  function applyScale(){
+    wrap.style.transform = `scale(${scale})`;
+  }
+
+  canvas.addEventListener('touchstart', e=>{
+    if(e.touches.length===2){
+      e.preventDefault();
+      lastDist = getDist(e.touches);
+      const c = getCenter(e.touches);
+      const cr = canvas.getBoundingClientRect();
+      originX = c.x - cr.left + canvas.scrollLeft;
+      originY = c.y - cr.top  + canvas.scrollTop;
+      wrap.style.transformOrigin = originX+'px '+originY+'px';
+    } else {
+      lastDist = null;
+    }
+  },{passive:false});
+
+  canvas.addEventListener('touchmove', e=>{
+    if(e.touches.length===2 && lastDist!==null){
+      e.preventDefault();
+      const newDist = getDist(e.touches);
+      const ratio   = newDist / lastDist;
+      const newScale = Math.min(maxScale, Math.max(minScale, scale * ratio));
+      scale    = newScale;
+      lastDist = newDist;
+      applyScale();
+      drawConn();
+    }
+  },{passive:false});
+
+  canvas.addEventListener('touchend', e=>{
+    if(e.touches.length < 2) lastDist = null;
+  });
+
+  /* Double-tap to reset zoom */
+  let lastTap = 0;
+  canvas.addEventListener('touchend', e=>{
+    if(e.touches.length===0){
+      const now = Date.now();
+      if(now - lastTap < 300){
+        scale = 1;
+        wrap.style.transformOrigin = '0 0';
+        applyScale();
+        drawConn();
+      }
+      lastTap = now;
+    }
+  });
+})();
+
 init();
 </script>
 </body>
