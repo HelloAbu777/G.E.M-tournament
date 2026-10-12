@@ -1,0 +1,892 @@
+﻿<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no"/>
+<title>G.E.M — ICCup Tournament</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+:root{
+  --bg:#181c24;
+  --card:rgba(22,28,40,0.80);
+  --card-l:rgba(30,20,36,0.80);
+  --b:rgba(180,200,215,0.10);
+  --b2:rgba(180,200,215,0.22);
+  --gold:#d4a843;
+  --gold2:#f0c84a;
+  --silver:#8ba0b4;
+  --silver2:#b8ccd8;
+  --purple:#7a4a6a;
+  --green:#4ab87a;
+  --rose:#d45070;
+  --sky:#6ab8d8;
+  --blue:#4a80c8;
+  --amber:#d4a843;
+  --violet:#a06488;
+  --txt:#dce8f0;
+  --txt2:#7a90a4;
+  --txt3:#2e3a46;
+  --CW:188px;
+  --CH:80px;
+  --CGAP:40px;
+  --RGAP:10px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;font-size:14px;overflow:hidden}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--txt);display:flex;flex-direction:column}
+
+/* ─── Background ─── */
+#bg{
+  position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-image: url('bg.jpg');
+  background-size: cover;
+  background-position: center top;
+  background-repeat: no-repeat;
+}
+/* Dark overlay — rasmdagi sovuq kulrang toniga mos */
+#bg::before{
+  content:'';position:absolute;inset:0;
+  background:
+    linear-gradient(180deg,
+      rgba(18,22,28,0.82) 0%,
+      rgba(14,18,24,0.72) 40%,
+      rgba(18,22,28,0.85) 100%),
+    radial-gradient(ellipse 60% 50% at 50% 30%, rgba(100,80,50,.08) 0%, transparent 70%);
+}
+#bg::after{
+  content:'';position:absolute;inset:0;
+  background-image:
+    linear-gradient(rgba(140,165,185,.022) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(140,165,185,.022) 1px,transparent 1px);
+  background-size:38px 38px;
+}
+
+/* ─── Header ─── */
+.hdr{position:relative;z-index:30;flex-shrink:0;height:54px;
+  background:rgba(14,17,22,0.92);backdrop-filter:blur(20px);border-bottom:1px solid var(--b);
+  display:flex;align-items:center;padding:0 20px;gap:12px}
+.logo{width:30px;height:30px;border-radius:7px;
+  background:linear-gradient(135deg,#7a5030,#c8922a);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.logo svg{width:14px;height:14px;stroke:#fff;fill:none;stroke-width:2.3;stroke-linecap:round;stroke-linejoin:round}
+.bname{font-size:.88rem;font-weight:900;letter-spacing:.5px;color:var(--txt)}
+.bsub{font-size:.57rem;color:var(--txt2);margin-top:1px}
+.sep{width:1px;height:22px;background:var(--b);flex-shrink:0}
+.ht{font-size:.76rem;font-weight:700;color:var(--txt)}.hs{font-size:.6rem;color:var(--txt2);margin-top:1px}
+.hr{display:flex;gap:7px;align-items:center;margin-left:auto}
+.pill{padding:3px 9px;border-radius:99px;border:1px solid transparent;font-size:.58rem;font-weight:700;letter-spacing:.5px;text-transform:uppercase}
+/* Winners pill — silver-blue */
+.pb{background:rgba(106,184,216,.12);color:#9ad0e8;border-color:rgba(106,184,216,.25)}
+/* Losers pill — muted purple */
+.pr{background:rgba(160,100,136,.12);color:#c8a0b8;border-color:rgba(160,100,136,.25)}
+/* Stage pill — gold */
+.pg{background:rgba(212,168,67,.12);color:#ddb84a;border-color:rgba(212,168,67,.25)}
+.btn{height:28px;padding:0 11px;border-radius:6px;border:1px solid var(--b);background:transparent;
+  color:var(--txt2);font-family:inherit;font-size:.65rem;font-weight:600;cursor:pointer;
+  display:flex;align-items:center;gap:4px;transition:all .14s;white-space:nowrap}
+.btn:hover{background:rgba(255,255,255,.04);border-color:var(--b2);color:var(--txt)}
+.btn svg{width:11px;height:11px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+.btn-r:hover{border-color:rgba(212,80,112,.3);color:var(--rose)}
+.btn-g:hover{border-color:rgba(74,184,122,.3);color:var(--green)}
+
+/* ─── Canvas ─── */
+#canvas{position:relative;z-index:1;flex:1;overflow:auto;padding:28px 32px 40px;min-height:0}
+
+/* ─── Root bracket layout ─── */
+/*
+  LAYOUT (left → center → right):
+  
+  [PRE]  |  [W-R16][W-QF][W-SF][W-F]  |  [GF+🏆]  |  [L-R16][L-QF][L-SF][L-F]
+  
+  PRE: 14 matches (28 teams)
+    Winners → W-R16 (left bracket, flows left→right)
+    Losers  → L-R16 (right bracket, flows right→left)
+  
+  After R16: yutqazgan chiqib ketadi (single elimination).
+  Both brackets are single-elimination from R16 onwards.
+  They meet at Grand Final.
+*/
+#bracket{
+  display:inline-flex;
+  flex-direction:row;
+  align-items:flex-start;
+  width:max-content;
+  position:relative;
+  gap:0;
+}
+
+/* ─── Round column ─── */
+.col{
+  display:flex;flex-direction:column;
+  align-items:stretch;
+  width:var(--CW);
+  flex-shrink:0;
+  margin:0 calc(var(--CGAP)/2);
+}
+.col-hdr{
+  height:26px;margin-bottom:10px;
+  display:flex;align-items:center;justify-content:center;
+}
+.col-hdr span{
+  font-size:.58rem;font-weight:700;letter-spacing:1.3px;text-transform:uppercase;
+  padding:4px 12px;border-radius:99px;border:1px solid var(--b);
+  background:rgba(12,15,22,.75);color:var(--txt3);white-space:nowrap;transition:.18s;
+  backdrop-filter:blur(4px);
+}
+.col-hdr.done span{color:var(--sky);border-color:rgba(106,184,216,.3)}
+.col-hdr.wside span{color:rgba(106,184,216,.85);border-color:rgba(106,184,216,.22)}
+.col-hdr.lside span{color:rgba(160,100,136,.85);border-color:rgba(160,100,136,.22)}
+.col-hdr.pre span{color:rgba(212,168,67,.85);border-color:rgba(212,168,67,.22)}
+.col-hdr.gfhdr span{color:var(--gold2);border-color:rgba(212,168,67,.35)}
+.col-body{
+  display:flex;flex-direction:column;
+  justify-content:space-around;
+  flex:1;
+}
+
+/* ─── Match card ─── */
+.mwrap{position:relative;margin:calc(var(--RGAP)/2) 0;flex-shrink:0}
+.mc{
+  width:var(--CW);height:var(--CH);
+  background:var(--card);
+  border:1px solid var(--b);
+  border-radius:9px;overflow:hidden;
+  display:flex;flex-direction:column;
+  position:relative;
+  backdrop-filter:blur(8px);
+  transition:border-color .14s,box-shadow .14s;
+}
+.mc:hover{border-color:rgba(184,204,216,.22);box-shadow:0 4px 20px rgba(0,0,0,.4)}
+.mc.lcard{background:var(--card-l);border-color:rgba(160,100,136,.12)}
+.mc.lcard:hover{border-color:rgba(160,100,136,.28)}
+.mc.gcard{border-color:rgba(212,168,67,.22)}.mc.gcard:hover{border-color:rgba(212,168,67,.45)}
+.mc-id{position:absolute;top:2px;right:5px;font-size:.44rem;font-weight:600;color:rgba(138,160,180,.35);pointer-events:none;z-index:2}
+.mc-div{height:1px;background:rgba(160,185,210,.09);flex-shrink:0}
+
+/* ─── Team row ─── */
+.team{
+  flex:1;display:flex;align-items:center;padding:0 8px;gap:6px;
+  cursor:pointer;min-width:0;transition:background .12s;user-select:none;
+}
+.team:hover{background:rgba(200,215,230,.04)}
+.team.won{background:rgba(74,184,122,.09)}.team.won .tname{color:#6ad898;font-weight:700}
+.team.empty,.team.noclick{pointer-events:none;cursor:default}
+.tno{font-size:.55rem;font-weight:700;color:var(--silver);width:14px;text-align:right;flex-shrink:0}
+.tav{
+  width:24px;height:24px;border-radius:6px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-size:.52rem;font-weight:800;color:#fff;
+  transition:transform .12s;
+}
+.team:hover .tav{transform:scale(1.1)}
+.team.won .tav{box-shadow:0 0 0 2px rgba(106,216,152,.55)}
+.tname{
+  flex:1;font-size:.75rem;font-weight:500;color:var(--txt);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  outline:none;transition:color .12s;border-radius:3px;
+}
+.tname.tbd{color:var(--txt3);font-style:italic}
+.tname[contenteditable=true]{
+  background:rgba(140,185,215,.1);padding:1px 5px;
+  caret-color:var(--silver2);border-bottom:1.5px solid rgba(140,185,215,.5);
+}
+.tick{width:14px;height:14px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.tick svg{width:12px;height:12px;stroke:#6ad898;fill:none;stroke-width:2.4;
+  stroke-linecap:round;stroke-linejoin:round;opacity:0;transition:opacity .12s}
+.team.won .tick svg{opacity:1}
+
+/* ─── Center (GF + trophy) ─── */
+.center{
+  display:flex;flex-direction:column;align-items:center;gap:14px;
+  padding:0 12px;flex-shrink:0;
+  /* vertically centered to main bracket height — done via margin-top in JS */
+}
+.champ-box{
+  width:160px;border-radius:14px;
+  border:1px solid rgba(212,168,67,.30);
+  background:linear-gradient(150deg,rgba(212,168,67,.10),rgba(122,74,106,.10));
+  backdrop-filter:blur(12px);
+  padding:18px 14px 14px;text-align:center;
+  box-shadow:0 0 40px rgba(212,168,67,.08),0 12px 36px rgba(0,0,0,.5);
+}
+.cico{width:42px;height:42px;border-radius:10px;
+  background:linear-gradient(135deg,rgba(212,168,67,.22),rgba(122,74,106,.18));
+  border:1px solid rgba(212,168,67,.25);
+  display:flex;align-items:center;justify-content:center;margin:0 auto 10px}
+.cico svg{width:20px;height:20px;stroke:var(--gold2);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.clbl{font-size:.52rem;font-weight:800;letter-spacing:2.5px;text-transform:uppercase;color:var(--gold2);margin-bottom:7px}
+.cname{font-size:.88rem;font-weight:800;color:var(--gold2);word-break:break-word;line-height:1.3}
+.cname.empty{font-size:.72rem;font-weight:400;color:var(--txt3);font-style:italic}
+
+/* ─── Divider ─── */
+.dv{width:1px;background:rgba(160,185,210,.08);align-self:stretch;flex-shrink:0;margin:0 6px}
+
+/* ─── Stats ─── */
+.stats{position:relative;z-index:30;flex-shrink:0;height:38px;
+  background:rgba(14,17,22,0.92);backdrop-filter:blur(16px);border-top:1px solid var(--b);
+  display:flex;align-items:center;padding:0 20px;gap:22px;overflow-x:auto;white-space:nowrap}
+.stat{display:flex;align-items:center;gap:5px;font-size:.63rem}
+.sdot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+.sl{color:var(--txt2)}.sv{color:var(--txt);font-weight:700}
+
+/* ─── Toast ─── */
+.toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%) translateY(8px);
+  background:rgba(22,26,32,0.97);border:1px solid rgba(212,168,67,.25);color:var(--txt);
+  font-size:.7rem;font-weight:600;padding:8px 16px;border-radius:8px;
+  box-shadow:0 8px 24px rgba(0,0,0,.5);display:flex;align-items:center;gap:6px;
+  opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:999}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast svg{width:11px;height:11px;stroke:#6ad898;fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+
+/* ─── SVG connectors ─── */
+#svg-conn{position:absolute;inset:0;pointer-events:none;overflow:visible;z-index:0}
+.conn{
+  fill:none;
+  stroke:rgba(160,185,210,0.13);
+  stroke-width:1.6;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+}
+.conn.on{stroke:rgba(180,210,240,0.38);stroke-width:2}
+.conn.w{stroke:rgba(140,185,215,0.13)}
+.conn.w.on{stroke:rgba(120,190,230,0.42)}
+.conn.l{stroke:rgba(180,150,190,0.13)}
+.conn.l.on{stroke:rgba(190,160,210,0.42)}
+
+/* ─── Auth Modal ─── */
+.modal-overlay{
+  position:fixed;inset:0;z-index:200;
+  background:rgba(0,0,0,.7);backdrop-filter:blur(8px);
+  display:flex;align-items:center;justify-content:center;
+  opacity:0;pointer-events:none;transition:opacity .2s;
+}
+.modal-overlay.open{opacity:1;pointer-events:all}
+.modal{
+  width:320px;background:rgba(20,24,34,.97);
+  border:1px solid rgba(212,168,67,.25);border-radius:14px;
+  padding:28px 24px;
+  box-shadow:0 20px 60px rgba(0,0,0,.5);
+  transform:translateY(10px);transition:transform .2s;
+}
+.modal-overlay.open .modal{transform:translateY(0)}
+.modal-title{font-size:.9rem;font-weight:800;color:var(--txt);margin-bottom:6px}
+.modal-sub{font-size:.7rem;color:var(--txt2);margin-bottom:20px}
+.modal-input{
+  width:100%;padding:10px 14px;border-radius:8px;
+  border:1px solid rgba(180,200,215,.15);
+  background:rgba(255,255,255,.05);color:var(--txt);
+  font-family:inherit;font-size:.82rem;outline:none;
+  transition:border-color .15s;
+}
+.modal-input:focus{border-color:rgba(212,168,67,.4)}
+.modal-error{font-size:.7rem;color:var(--rose);margin-top:8px;min-height:18px}
+.modal-btns{display:flex;gap:8px;margin-top:16px}
+.modal-btn{
+  flex:1;height:36px;border-radius:8px;border:none;
+  font-family:inherit;font-size:.78rem;font-weight:700;cursor:pointer;
+  transition:opacity .15s;
+}
+.modal-btn-cancel{background:rgba(255,255,255,.06);color:var(--txt2)}
+.modal-btn-cancel:hover{opacity:.7}
+.modal-btn-ok{background:linear-gradient(135deg,#a87828,#d4a843);color:#1a1200}
+.modal-btn-ok:hover{opacity:.85}
+/* Admin mode indicator */
+.admin-badge{
+  display:none;
+  padding:3px 9px;border-radius:99px;
+  background:rgba(212,168,67,.15);color:var(--gold2);
+  border:1px solid rgba(212,168,67,.3);
+  font-size:.58rem;font-weight:700;letter-spacing:.5px;text-transform:uppercase;
+}
+.admin-badge.visible{display:inline-flex;align-items:center;gap:4px}
+/* Loading spinner */
+.loading{
+  position:fixed;inset:0;z-index:300;
+  background:rgba(10,12,18,.85);
+  display:flex;align-items:center;justify-content:center;
+  flex-direction:column;gap:14px;
+}
+.loading.hidden{display:none}
+.spinner{
+  width:36px;height:36px;border-radius:50%;
+  border:3px solid rgba(212,168,67,.2);
+  border-top-color:var(--gold2);
+  animation:spin .8s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{font-size:.78rem;color:var(--txt2);font-weight:500}
+/* Connection status */
+.conn-status{
+  font-size:.6rem;font-weight:600;
+  padding:2px 7px;border-radius:99px;
+  display:flex;align-items:center;gap:4px;
+}
+.conn-status.online{color:#6ad898;background:rgba(74,184,122,.1)}
+.conn-status.offline{color:var(--rose);background:rgba(212,80,112,.1)}
+.conn-status-dot{width:5px;height:5px;border-radius:50%;background:currentColor}
+
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,.07);border-radius:99px}
+</style>
+</head>
+<body>
+<div id="bg"></div>
+
+<header class="hdr">
+  <div class="logo"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+  <div><div class="bname">G.E.M</div><div class="bsub">Gaming Club · ICCup</div></div>
+  <div class="sep"></div>
+  <div><div class="ht">ICCup Tournament 2026</div><div class="hs">28 Jamoa · Pre-Round + Single Elimination × 2</div></div>
+  <div class="hr">
+    <span class="pill pb">Winners</span>
+    <span class="pill pr">Losers</span>
+    <span class="pill pg" id="sbadge">Pre-Round</span>
+    <div class="sep"></div>
+    <button class="btn btn-r" onclick="resetAll()">
+      <svg viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.95"/></svg>Reset
+    </button>
+    <button class="btn btn-g" onclick="doExport()">
+      <svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Eksport
+    </button>
+    <button class="btn" onclick="openAuthModal()" id="admin-login-btn">
+      <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Admin
+    </button>
+    <span class="admin-badge" id="admin-badge">
+      <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Admin
+    </span>
+    <span class="conn-status" id="conn-status">
+      <span class="conn-status-dot"></span>—
+    </span>
+  </div>
+</header>
+
+<div id="canvas"><div id="bracket"></div></div>
+
+<div class="stats">
+  <div class="stat"><div class="sdot" style="background:var(--sky)"></div><span class="sl">Jami:</span><span class="sv" id="s-t">—</span></div>
+  <div class="stat"><div class="sdot" style="background:var(--green)"></div><span class="sl">O'ynalgan:</span><span class="sv" id="s-p">0</span></div>
+  <div class="stat"><div class="sdot" style="background:var(--txt3)"></div><span class="sl">Qolgan:</span><span class="sv" id="s-l">—</span></div>
+  <div class="stat"><div class="sdot" style="background:var(--gold2)"></div><span class="sl">Champion:</span><span class="sv" id="s-c">—</span></div>
+</div>
+<div class="toast" id="toast"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Buferga nusxa olindi</div>
+
+<!-- Loading -->
+<div class="loading" id="loading">
+  <div class="spinner"></div>
+  <div class="loading-text">Ma'lumotlar yuklanmoqda...</div>
+</div>
+
+<!-- Auth Modal -->
+<div class="modal-overlay" id="auth-modal">
+  <div class="modal">
+    <div class="modal-title">🔐 Admin kirish</div>
+    <div class="modal-sub">Turnirni boshqarish uchun parol kiriting</div>
+    <input class="modal-input" id="auth-input" type="password" placeholder="Parol..." autocomplete="current-password"/>
+    <div class="modal-error" id="auth-error"></div>
+    <div class="modal-btns">
+      <button class="modal-btn modal-btn-cancel" onclick="closeAuthModal()">Bekor</button>
+      <button class="modal-btn modal-btn-ok" onclick="submitAuth()">Kirish</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* =======================================================================
+   G.E.M · ICCup · 28 Teams · PostgreSQL Backend
+   API: GET /api/state | POST /api/auth | PUT /api/state | POST /api/reset
+======================================================================= */
+const API   = '';          // same origin
+const N     = 28;
+const DEF   = Array.from({length:N}, (_,i) => `Jamoa ${i+1}`);
+const AVC   = ['#5a8fa8','#7a6a9a','#9a7048','#5a7898','#8a5870',
+               '#4a8878','#9a8838','#7a5888','#4878a8','#888858',
+               '#6a5898','#4a9868','#986848','#5888a8','#786898',
+               '#a87848','#489878','#886858','#5878a8','#7858a8',
+               '#a85868','#68a858','#5898a8','#a89848','#689888',
+               '#8868a8','#a86878','#58a888'];
+const avc   = i => AVC[i % AVC.length];
+const ini   = s => { const p=s.trim().split(/\s+/); return p.length>1?(p[0][0]+p[1][0]).toUpperCase():s.slice(0,2).toUpperCase(); };
+
+/* ── State & Auth ── */
+let S        = { teams:[...DEF], matches:{} };
+let IS_ADMIN = false;
+let ADMIN_PW = '';
+let _saveTimer = null;
+
+/* ── API helpers ── */
+async function apiGet(){
+  const r = await fetch(`${API}/api/state`);
+  if(!r.ok) throw new Error(`HTTP ${r.status}`);
+  return r.json();
+}
+async function apiSave(teams, matches){
+  const r = await fetch(`${API}/api/state`,{
+    method:'PUT',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ password: ADMIN_PW, teams, matches })
+  });
+  if(!r.ok){ const e=await r.json(); throw new Error(e.error||'Save failed'); }
+  return r.json();
+}
+async function apiAuth(pw){
+  const r = await fetch(`${API}/api/auth`,{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ password: pw })
+  });
+  return r.json();
+}
+async function apiReset(pw){
+  const r = await fetch(`${API}/api/reset`,{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ password: pw })
+  });
+  if(!r.ok){ const e=await r.json(); throw new Error(e.error); }
+  return r.json();
+}
+
+/* ── Show/hide loading ── */
+function showLoading(msg){ const el=document.getElementById('loading'); el.querySelector('.loading-text').textContent=msg||'Yuklanmoqda...'; el.classList.remove('hidden'); }
+function hideLoading(){ document.getElementById('loading').classList.add('hidden'); }
+
+/* ── Connection status ── */
+function setStatus(online){
+  const el=document.getElementById('conn-status');
+  el.className='conn-status '+(online?'online':'offline');
+  el.innerHTML=`<span class="conn-status-dot"></span>${online?'Online':'Offline'}`;
+}
+
+/* ── Save debounced ── */
+function scheduleSave(){
+  if(!IS_ADMIN) return;
+  clearTimeout(_saveTimer);
+  _saveTimer = setTimeout(async ()=>{
+    try{
+      await apiSave(S.teams, S.matches);
+      setStatus(true);
+      showToast('Saqlandi ✓');
+    } catch(e){
+      setStatus(false);
+      showToast('Saqlash xatosi!');
+    }
+  }, 600);
+}
+
+/* ── Auth modal ── */
+function openAuthModal(){
+  document.getElementById('auth-input').value='';
+  document.getElementById('auth-error').textContent='';
+  document.getElementById('auth-modal').classList.add('open');
+  setTimeout(()=>document.getElementById('auth-input').focus(),120);
+}
+function closeAuthModal(){ document.getElementById('auth-modal').classList.remove('open'); }
+async function submitAuth(){
+  const pw = document.getElementById('auth-input').value.trim();
+  if(!pw){ document.getElementById('auth-error').textContent='Parol kiriting'; return; }
+  document.getElementById('auth-error').textContent='...';
+  try{
+    const res = await apiAuth(pw);
+    if(res.ok){
+      IS_ADMIN = true; ADMIN_PW = pw;
+      closeAuthModal();
+      document.getElementById('admin-badge').classList.add('visible');
+      document.getElementById('admin-login-btn').style.display='none';
+      showToast('Admin rejim faollashtirildi');
+      render();
+    } else {
+      document.getElementById('auth-error').textContent = res.error||"Noto'g'ri parol";
+    }
+  } catch(e){
+    document.getElementById('auth-error').textContent = 'Server bilan bog\'lanib bo\'lmadi';
+  }
+}
+document.getElementById('auth-input').addEventListener('keydown', e=>{ if(e.key==='Enter') submitAuth(); });
+document.getElementById('auth-modal').addEventListener('click', e=>{ if(e.target===document.getElementById('auth-modal')) closeAuthModal(); });
+
+/* =======================================================================
+   MATCH REGISTRY
+======================================================================= */
+const R = {};
+function defM(id, side, s0, s1, nextW, nextWSlot) {
+  R[id] = { id, side, slots:[s0,s1], nextW:nextW||null, nextWSlot:nextWSlot||0 };
+}
+const T = idx => ({t:'team',idx});
+const W = src => ({t:'w', src});
+const L = src => ({t:'l', src});
+
+/* PRE-ROUND: 14 matches */
+for (let i=0;i<14;i++){
+  defM(`PRE_${i+1}`,'PRE', T(i), T(27-i),
+    `W_R16_${Math.floor(i/2)+1}`, i%2);
+  R[`PRE_${i+1}`].nextL     = `L_R16_${Math.floor(i/2)+1}`;
+  R[`PRE_${i+1}`].nextLSlot = i%2;
+}
+
+/* W_R16: 7 matches */
+for (let i=0;i<7;i++)
+  defM(`W_R16_${i+1}`,'W', W(`PRE_${i*2+1}`), W(`PRE_${i*2+2}`),
+    `W_QF_${Math.floor(i/2)+1}`, i%2);
+
+/* W_QF: 4 matches */
+for (let i=0;i<4;i++)
+  defM(`W_QF_${i+1}`,'W',
+    W(`W_R16_${i*2+1}`), i<3 ? W(`W_R16_${i*2+2}`) : {t:'bye'},
+    `W_SF_${Math.floor(i/2)+1}`, i%2);
+
+/* W_SF, W_F */
+defM('W_SF_1','W', W('W_QF_1'), W('W_QF_2'), 'W_F', 0);
+defM('W_SF_2','W', W('W_QF_3'), W('W_QF_4'), 'W_F', 1);
+defM('W_F',   'W', W('W_SF_1'), W('W_SF_2'), 'GF',  0);
+
+/* L_R16: 7 matches */
+for (let i=0;i<7;i++)
+  defM(`L_R16_${i+1}`,'L', L(`PRE_${i*2+1}`), L(`PRE_${i*2+2}`),
+    `L_QF_${Math.floor(i/2)+1}`, i%2);
+
+/* L_QF: 4 matches */
+for (let i=0;i<4;i++)
+  defM(`L_QF_${i+1}`,'L',
+    W(`L_R16_${i*2+1}`), i<3 ? W(`L_R16_${i*2+2}`) : {t:'bye'},
+    `L_SF_${Math.floor(i/2)+1}`, i%2);
+
+/* L_SF, L_F */
+defM('L_SF_1','L', W('L_QF_1'), W('L_QF_2'), 'L_F', 0);
+defM('L_SF_2','L', W('L_QF_3'), W('L_QF_4'), 'L_F', 1);
+defM('L_F',   'L', W('L_SF_1'), W('L_SF_2'), 'GF',  1);
+
+/* Grand Final */
+defM('GF','G', W('W_F'), W('L_F'), null, 0);
+
+/* =======================================================================
+   RESOLVE
+======================================================================= */
+function resolve(id, si){
+  const m=R[id]; if(!m) return null;
+  const sl=m.slots[si]; if(!sl) return null;
+  if(sl.t==='team') return sl.idx;
+  if(sl.t==='bye')  return null;
+  if(sl.t==='w'){ const mr=S.matches[sl.src]; if(!mr||mr.w==null) return null; return resolve(sl.src,mr.w); }
+  if(sl.t==='l'){ const mr=S.matches[sl.src]; if(!mr||mr.w==null) return null; return resolve(sl.src,mr.w===0?1:0); }
+  return null;
+}
+function isWon(id,si){ const m=S.matches[id]; return !!(m&&m.w===si); }
+
+function cascade(id){
+  const d=R[id]; if(!d) return;
+  if(d.nextW){ const nm=S.matches[d.nextW]; if(nm){nm.w=null;cascade(d.nextW);} }
+  if(d.nextL){ const nm=S.matches[d.nextL]; if(nm){nm.w=null;cascade(d.nextL);} }
+  Object.values(R).forEach(mr=>mr.slots.forEach(sl=>{
+    if(sl.t==='l'&&sl.src===id){ const nm=S.matches[mr.id]; if(nm){nm.w=null;cascade(mr.id);} }
+  }));
+}
+
+function setWinner(id,si){
+  if(!IS_ADMIN){ openAuthModal(); return; }
+  if(resolve(id,si)===null) return;
+  if(!S.matches[id]) S.matches[id]={w:null};
+  S.matches[id].w = (S.matches[id].w===si) ? null : si;
+  cascade(id); autoBye(); scheduleSave(); render();
+}
+
+function autoBye(){
+  let changed=true;
+  while(changed){
+    changed=false;
+    Object.values(R).forEach(d=>{
+      if(!d.slots.some(s=>s.t==='bye')) return;
+      if(!S.matches[d.id]) S.matches[d.id]={w:null};
+      if(S.matches[d.id].w!=null) return;
+      const ws=d.slots[0].t==='bye'?1:0;
+      if(resolve(d.id,ws)!==null){ S.matches[d.id].w=ws; changed=true; }
+    });
+  }
+}
+
+/* =======================================================================
+   INLINE EDIT — only in admin mode
+======================================================================= */
+let _ed=false;
+function startEdit(el,ti,ev){
+  if(ev) ev.stopPropagation();
+  if(!IS_ADMIN){ openAuthModal(); return; }
+  if(_ed) return; _ed=true;
+  el.setAttribute('contenteditable','true'); el.focus();
+  const r=document.createRange(); r.selectNodeContents(el);
+  const s=window.getSelection(); s.removeAllRanges(); s.addRange(r);
+  function done(){
+    if(!_ed) return; _ed=false;
+    el.setAttribute('contenteditable','false');
+    const v=el.textContent.trim();
+    if(v){ S.teams[ti]=v; scheduleSave(); } else { el.textContent=S.teams[ti]; }
+    render();
+  }
+  el.addEventListener('keydown',e=>{
+    if(e.key==='Enter'){e.preventDefault();done();}
+    if(e.key==='Escape'){_ed=false;el.setAttribute('contenteditable','false');el.textContent=S.teams[ti];}
+  },{once:true});
+  el.addEventListener('blur',done,{once:true});
+}
+
+/* =======================================================================
+   BUILD MATCH
+======================================================================= */
+function buildMatch(matchId){
+  const d=R[matchId];
+  const wrap=document.createElement('div'); wrap.className='mwrap'; wrap.dataset.mid=matchId;
+  const card=document.createElement('div');
+  card.className='mc'+(d.side==='L'?' lcard':'')+(d.side==='G'?' gcard':'');
+  const idtag=document.createElement('span'); idtag.className='mc-id'; idtag.textContent=matchId;
+  card.appendChild(idtag);
+
+  [0,1].forEach(si=>{
+    if(si===1){ const dv=document.createElement('div');dv.className='mc-div';card.appendChild(dv); }
+    const sl=d.slots[si], ti=resolve(matchId,si);
+    const isBye=sl.t==='bye', isSeed=sl.t==='team';
+    const won=isWon(matchId,si), has=ti!==null;
+
+    const row=document.createElement('div');
+    row.className='team'+(won?' won':'')+(isBye?' noclick':'')+((!has&&!isSeed&&!isBye)?' empty':'');
+
+    if(!isBye&&has){
+      row.addEventListener('click',e=>{
+        if(e.target.classList.contains('tname')&&isSeed) return;
+        setWinner(matchId,si);
+      });
+    }
+
+    const no=document.createElement('span'); no.className='tno'; no.textContent=has?ti+1:'';
+    const av=document.createElement('div');  av.className='tav';
+    if(has){ av.style.background=avc(ti); av.textContent=ini(S.teams[ti]); }
+    else av.style.background='rgba(255,255,255,.03)';
+
+    const nm=document.createElement('span');
+    if(isBye){
+      nm.className='tname tbd'; nm.textContent='—';
+    } else if(isSeed){
+      nm.className='tname'; nm.textContent=S.teams[sl.idx];
+      nm.setAttribute('contenteditable','false');
+      nm.style.cursor= IS_ADMIN ? 'text' : 'default';
+      nm.title= IS_ADMIN ? "Nomni o'zgartirish" : "Ko'rish rejimi";
+      nm.addEventListener('click',e=>startEdit(nm,sl.idx,e));
+    } else if(has){
+      nm.className='tname'; nm.textContent=S.teams[ti];
+    } else {
+      nm.className='tname tbd'; nm.textContent='TBD';
+    }
+
+    const tk=document.createElement('span'); tk.className='tick';
+    tk.innerHTML='<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>';
+    row.appendChild(no);row.appendChild(av);row.appendChild(nm);row.appendChild(tk);
+    card.appendChild(row);
+  });
+  wrap.appendChild(card); return wrap;
+}
+
+/* =======================================================================
+   BUILD COLUMN
+======================================================================= */
+function buildCol(ids,label,side,extraCls){
+  const col=document.createElement('div'); col.className='col';
+  const allDone=ids.every(id=>{const m=S.matches[id];return m&&m.w!=null});
+  const hdr=document.createElement('div');
+  hdr.className='col-hdr'+(allDone?' done':'')+(extraCls?' '+extraCls:'');
+  hdr.innerHTML=`<span>${label}</span>`; col.appendChild(hdr);
+  const body=document.createElement('div'); body.className='col-body';
+  ids.forEach(id=>body.appendChild(buildMatch(id)));
+  col.appendChild(body); return col;
+}
+
+/* =======================================================================
+   RENDER
+======================================================================= */
+function render(){
+  autoBye();
+  const br=document.getElementById('bracket'); br.innerHTML='';
+
+  br.appendChild(buildCol(
+    ['PRE_1','PRE_2','PRE_3','PRE_4','PRE_5','PRE_6','PRE_7',
+     'PRE_8','PRE_9','PRE_10','PRE_11','PRE_12','PRE_13','PRE_14'],
+    'Pre-Round','PRE','pre'));
+  br.appendChild(Object.assign(document.createElement('div'),{className:'dv'}));
+  br.appendChild(buildCol(['W_R16_1','W_R16_2','W_R16_3','W_R16_4','W_R16_5','W_R16_6','W_R16_7'],'1/16 Final','W','wside'));
+  br.appendChild(buildCol(['W_QF_1','W_QF_2','W_QF_3','W_QF_4'],'1/4 Final','W','wside'));
+  br.appendChild(buildCol(['W_SF_1','W_SF_2'],'1/2 Final','W','wside'));
+  br.appendChild(buildCol(['W_F'],'W-Final','W','wside'));
+  br.appendChild(Object.assign(document.createElement('div'),{className:'dv'}));
+
+  /* Grand Final + Champion */
+  const center=document.createElement('div'); center.className='center';
+  const ghdr=document.createElement('div'); ghdr.className='col-hdr gfhdr'; ghdr.style.marginBottom='10px';
+  ghdr.innerHTML='<span>Grand Final</span>'; center.appendChild(ghdr);
+  center.appendChild(buildMatch('GF'));
+  const fm=S.matches['GF']; let ci=null; if(fm&&fm.w!=null) ci=resolve('GF',fm.w);
+  const cb=document.createElement('div'); cb.className='champ-box';
+  cb.innerHTML=`<div class="cico"><svg viewBox="0 0 24 24"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg></div><div class="clbl">Champion</div><div class="cname${ci===null?' empty':''}">${ci!==null?S.teams[ci]:'Hali aniqlanmadi'}</div>`;
+  center.appendChild(cb); br.appendChild(center);
+  br.appendChild(Object.assign(document.createElement('div'),{className:'dv'}));
+
+  br.appendChild(buildCol(['L_F'],'L-Final','L','lside'));
+  br.appendChild(buildCol(['L_SF_1','L_SF_2'],'L-1/2','L','lside'));
+  br.appendChild(buildCol(['L_QF_1','L_QF_2','L_QF_3','L_QF_4'],'L-1/4','L','lside'));
+  br.appendChild(buildCol(['L_R16_1','L_R16_2','L_R16_3','L_R16_4','L_R16_5','L_R16_6','L_R16_7'],'L-1/16','L','lside'));
+
+  updateStats();
+  requestAnimationFrame(()=>{
+    const bodies=document.querySelectorAll('.col-body');
+    let maxH=0; bodies.forEach(b=>{if(b.offsetHeight>maxH)maxH=b.offsetHeight;});
+    bodies.forEach(b=>{b.style.minHeight=maxH+'px';});
+    const centerEl=document.querySelector('.center');
+    if(centerEl) centerEl.style.marginTop=Math.max(0,(maxH-centerEl.offsetHeight)/2+36)+'px';
+    drawConn();
+  });
+}
+
+/* =======================================================================
+   CONNECTORS
+======================================================================= */
+function drawConn(){
+  const old=document.getElementById('svg-conn'); if(old) old.remove();
+  const canvas=document.getElementById('canvas');
+  const br=document.getElementById('bracket');
+  const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
+  svg.id='svg-conn';
+  svg.style.cssText='position:absolute;inset:0;pointer-events:none;overflow:visible;z-index:0';
+  svg.setAttribute('width',br.scrollWidth); svg.setAttribute('height',br.scrollHeight);
+  const cR=canvas.getBoundingClientRect(), sX=canvas.scrollLeft, sY=canvas.scrollTop;
+
+  function path(fromId,fEdge,toId,tEdge,toSlot,cls){
+    const fe=document.querySelector(`[data-mid="${fromId}"]`);
+    const te=document.querySelector(`[data-mid="${toId}"]`);
+    if(!fe||!te) return;
+    const fR=fe.getBoundingClientRect(), tR=te.getBoundingClientRect();
+    const x1=(fEdge==='r'?fR.right:fR.left)-cR.left+sX;
+    const y1=fR.top+fR.height/2-cR.top+sY;
+    const x2=(tEdge==='r'?tR.right:tR.left)-cR.left+sX;
+    const y2=tR.top-cR.top+sY+(toSlot||0)*(tR.height/2)+(tR.height/4);
+    const cp=Math.abs(x2-x1)*0.55;
+    const cx1=fEdge==='r'?x1+cp:x1-cp, cx2=tEdge==='r'?x2+cp:x2-cp;
+    const on=!!(S.matches[fromId]&&S.matches[fromId].w!=null);
+    const p=document.createElementNS('http://www.w3.org/2000/svg','path');
+    p.setAttribute('d',`M${x1},${y1} C${cx1},${y1} ${cx2},${y2} ${x2},${y2}`);
+    p.setAttribute('class','conn '+(cls||'w')+(on?' on':''));
+    svg.appendChild(p);
+  }
+
+  for(let i=1;i<=14;i++) path(`PRE_${i}`,'r',R[`PRE_${i}`].nextW,'l',R[`PRE_${i}`].nextWSlot,'w');
+  for(let i=1;i<=14;i++){ const d=R[`PRE_${i}`]; if(d.nextL) path(`PRE_${i}`,'r',d.nextL,'r',d.nextLSlot,'l'); }
+  for(let i=1;i<=7;i++) path(`W_R16_${i}`,'r',R[`W_R16_${i}`].nextW,'l',R[`W_R16_${i}`].nextWSlot,'w');
+  for(let i=1;i<=4;i++) path(`W_QF_${i}`,'r',R[`W_QF_${i}`].nextW,'l',R[`W_QF_${i}`].nextWSlot,'w');
+  path('W_SF_1','r','W_F','l',0,'w'); path('W_SF_2','r','W_F','l',1,'w');
+  path('W_F','r','GF','l',0,'w');
+  for(let i=1;i<=7;i++) path(`L_R16_${i}`,'l',R[`L_R16_${i}`].nextW,'r',R[`L_R16_${i}`].nextWSlot,'l');
+  for(let i=1;i<=4;i++) path(`L_QF_${i}`,'l',R[`L_QF_${i}`].nextW,'r',R[`L_QF_${i}`].nextWSlot,'l');
+  path('L_SF_1','l','L_F','r',0,'l'); path('L_SF_2','l','L_F','r',1,'l');
+  path('L_F','l','GF','r',1,'l');
+  br.insertBefore(svg,br.firstChild);
+}
+
+/* =======================================================================
+   STATS
+======================================================================= */
+function updateStats(){
+  const real=Object.keys(R).filter(id=>!R[id].slots.some(s=>s.t==='bye'));
+  const tot=real.length;
+  const pl=real.filter(id=>{const m=S.matches[id];return m&&m.w!=null}).length;
+  document.getElementById('s-t').textContent=tot;
+  document.getElementById('s-p').textContent=pl;
+  document.getElementById('s-l').textContent=tot-pl;
+  const gm=S.matches['GF']; let ch='—';
+  if(gm&&gm.w!=null){const ci=resolve('GF',gm.w);if(ci!=null)ch=S.teams[ci];}
+  document.getElementById('s-c').textContent=ch;
+  const badge=document.getElementById('sbadge');
+  const chk=ids=>ids.every(id=>{const m=S.matches[id];return m&&m.w!=null});
+  if(chk(['GF']))badge.textContent='Tugadi 🏆';
+  else if(chk(['W_F','L_F']))badge.textContent='Grand Final';
+  else if(chk(['W_SF_1','W_SF_2']))badge.textContent='W-Final';
+  else if(chk(['W_QF_1','W_QF_2','W_QF_3','W_QF_4']))badge.textContent='1/2 Final';
+  else if(chk(['W_R16_1','W_R16_2','W_R16_3','W_R16_4','W_R16_5','W_R16_6','W_R16_7']))badge.textContent='1/4 Final';
+  else if(chk(['PRE_1','PRE_2','PRE_3','PRE_4','PRE_5','PRE_6','PRE_7','PRE_8','PRE_9','PRE_10','PRE_11','PRE_12','PRE_13','PRE_14']))badge.textContent='1/16 Final';
+  else badge.textContent='Pre-Round';
+}
+
+/* =======================================================================
+   RESET / EXPORT
+======================================================================= */
+async function resetAll(){
+  if(!IS_ADMIN){ openAuthModal(); return; }
+  if(!confirm("Barcha natijalarni o'chirmoqchimisiz?")) return;
+  showLoading('Tiklanmoqda...');
+  try{
+    await apiReset(ADMIN_PW);
+    const data=await apiGet();
+    S={ teams: data.teams||[...DEF], matches: data.matches||{} };
+    render(); showToast('Natijalar tozalandi');
+  } catch(e){ showToast('Xato: '+e.message); }
+  hideLoading();
+}
+
+function doExport(){
+  const L=['G.E.M ICCup 2026','='.repeat(44),''];
+  [{t:'PRE-ROUND',ids:Array.from({length:14},(_,i)=>`PRE_${i+1}`)},
+   {t:'WINNERS',  ids:['W_R16_1','W_R16_2','W_R16_3','W_R16_4','W_R16_5','W_R16_6','W_R16_7','W_QF_1','W_QF_2','W_QF_3','W_QF_4','W_SF_1','W_SF_2','W_F']},
+   {t:'LOSERS',   ids:['L_R16_1','L_R16_2','L_R16_3','L_R16_4','L_R16_5','L_R16_6','L_R16_7','L_QF_1','L_QF_2','L_QF_3','L_QF_4','L_SF_1','L_SF_2','L_F']},
+   {t:'GRAND FINAL',ids:['GF']}].forEach(sec=>{
+    L.push(sec.t); L.push('-'.repeat(40));
+    sec.ids.forEach(id=>{
+      const d=R[id];
+      const t0=resolve(id,0),t1=resolve(id,1);
+      const n0=d.slots[0].t==='bye'?'BYE':(t0!=null?S.teams[t0]:'TBD');
+      const n1=d.slots[1].t==='bye'?'BYE':(t1!=null?S.teams[t1]:'TBD');
+      const m=S.matches[id]; const w=m&&m.w!=null?(m.w===0?n0:n1):'?';
+      L.push(`  ${id.padEnd(10)} ${n0.padEnd(14)} vs ${n1.padEnd(14)} → ${w}`);
+    }); L.push('');
+  });
+  const gm=S.matches['GF'];
+  if(gm&&gm.w!=null){const ci=resolve('GF',gm.w);if(ci!=null)L.push(`🏆 CHAMPION: ${S.teams[ci]}`);}
+  navigator.clipboard.writeText(L.join('\n')).then(()=>showToast('Buferga nusxa olindi'));
+}
+
+/* =======================================================================
+   TOAST
+======================================================================= */
+let _toastTimer;
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.querySelector('svg+*') ? null : null;
+  t.lastChild.textContent=msg;
+  t.classList.add('show');
+  clearTimeout(_toastTimer);
+  _toastTimer=setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+/* =======================================================================
+   INIT — load from API
+======================================================================= */
+async function init(){
+  showLoading('Turnir ma\'lumotlari yuklanmoqda...');
+  try{
+    const data = await apiGet();
+    S = { teams: data.teams||[...DEF], matches: data.matches||{} };
+    setStatus(true);
+  } catch(e){
+    // Fallback to localStorage if API unavailable
+    const saved=localStorage.getItem('gem_fallback');
+    if(saved){ try{ S=JSON.parse(saved); }catch(er){} }
+    setStatus(false);
+    showToast('Offline rejim — o\'zgarishlar saqlanmaydi');
+  }
+  hideLoading();
+  render();
+}
+
+document.getElementById('canvas').addEventListener('scroll',()=>drawConn(),{passive:true});
+window.addEventListener('resize',()=>render());
+init();
+</body>
+</html>
+
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,.07);border-radius:99px}
