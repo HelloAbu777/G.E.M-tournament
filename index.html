@@ -812,7 +812,7 @@ function drawConn(){
   }
 
   for(let i=1;i<=14;i++) path(`PRE_${i}`,'r',R[`PRE_${i}`].nextW,'l',R[`PRE_${i}`].nextWSlot,'w');
-  for(let i=1;i<=14;i++){ const d=R[`PRE_${i}`]; if(d.nextL) path(`PRE_${i}`,'r',d.nextL,'r',d.nextLSlot,'l'); }
+  // PRE losers cross lines removed
   for(let i=1;i<=7;i++) path(`W_R16_${i}`,'r',R[`W_R16_${i}`].nextW,'l',R[`W_R16_${i}`].nextWSlot,'w');
   for(let i=1;i<=4;i++) path(`W_QF_${i}`,'r',R[`W_QF_${i}`].nextW,'l',R[`W_QF_${i}`].nextWSlot,'w');
   path('W_SF_1','r','W_F','l',0,'w'); path('W_SF_2','r','W_F','l',1,'w');
