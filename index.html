@@ -873,17 +873,21 @@ function showToast(msg){
    INIT — load from API
 ======================================================================= */
 async function init(){
-  showLoading('Turnir ma\'lumotlari yuklanmoqda...');
+  showLoading('Ma\'lumotlar yuklanmoqda...');
   try{
-    const data = await apiGet();
-    S = { teams: data.teams||[...DEF], matches: data.matches||{} };
-    setStatus(true);
+    const controller = new AbortController();
+    setTimeout(()=>controller.abort(), 6000);
+    const r = await fetch('/api/state', {signal: controller.signal});
+    if(r.ok){
+      const data = await r.json();
+      S = { teams: data.teams||[...DEF], matches: data.matches||{} };
+      setStatus(true);
+    } else {
+      throw new Error('HTTP '+r.status);
+    }
   } catch(e){
-    // Fallback to localStorage if API unavailable
-    const saved=localStorage.getItem('gem_fallback');
-    if(saved){ try{ S=JSON.parse(saved); }catch(er){} }
+    console.warn('API unavailable:', e.message);
     setStatus(false);
-    showToast('Offline rejim — o\'zgarishlar saqlanmaydi');
   }
   hideLoading();
   render();

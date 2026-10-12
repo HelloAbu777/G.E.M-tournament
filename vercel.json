@@ -1,10 +1,9 @@
 {
   "version": 2,
-  "routes": [
-    { "src": "/api/state",  "dest": "/api/state.js"  },
-    { "src": "/api/auth",   "dest": "/api/auth.js"   },
-    { "src": "/api/reset",  "dest": "/api/reset.js"  },
-    { "src": "/api/info",   "dest": "/api/info.js"   },
-    { "src": "/(.*)",       "dest": "/$1"             }
+  "rewrites": [
+    { "source": "/api/state",   "destination": "/api/state.js"  },
+    { "source": "/api/auth",    "destination": "/api/auth.js"   },
+    { "source": "/api/reset",   "destination": "/api/reset.js"  },
+    { "source": "/api/info",    "destination": "/api/info.js"   }
   ]
 }
