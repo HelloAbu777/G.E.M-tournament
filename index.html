@@ -688,12 +688,8 @@ function buildMatch(matchId){
     if(!isBye&&has){
       row.addEventListener('click',e=>{
         if(e.target.classList.contains('tname')&&isSeed) return;
-        if(d.side==='PRE'&&isSeed){if(IS_ADMIN)startSelectForSlot(matchId,si);else openAuthModal();}
-        else setWinner(matchId,si);
+        setWinner(matchId,si);
       });
-    } else if(d.side==='PRE'&&isSeed&&!has){
-      row.classList.remove('noclick');row.style.cursor='pointer';
-      row.addEventListener('click',()=>{if(IS_ADMIN)startSelectForSlot(matchId,si);else openAuthModal();});
     }
 
     const no=document.createElement('span'); no.className='tno'; no.textContent=has?ti+1:'';
@@ -773,7 +769,6 @@ function render(){
   br.appendChild(buildCol(['L_R16_1','L_R16_2','L_R16_3','L_R16_4','L_R16_5','L_R16_6','L_R16_7'],'L-1/16','L','lside'));
 
   updateStats();
-  if(ROSTER_OPEN) buildRoster();
   requestAnimationFrame(()=>{
     const bodies=document.querySelectorAll('.col-body');
     let maxH=0; bodies.forEach(b=>{if(b.offsetHeight>maxH)maxH=b.offsetHeight;});
@@ -923,7 +918,6 @@ async function init(){
     console.warn('API unavailable:', e.message);
     setStatus(false);
   }
-  restoreSlots();
   hideLoading();
   render();
 }
@@ -1002,88 +996,6 @@ window.addEventListener('resize',()=>render());
   });
 })();
 
-/* ── ROSTER ── */
-let ROSTER_OPEN=false, SELECTING=null;
-function toggleRoster(){
-  ROSTER_OPEN=!ROSTER_OPEN;
-  document.getElementById('roster-panel').classList.toggle('hidden',!ROSTER_OPEN);
-  const btn=document.getElementById('roster-btn');
-  btn.style.color=ROSTER_OPEN?'var(--gold2)':'';
-  btn.style.background=ROSTER_OPEN?'rgba(212,168,67,.1)':'';
-  if(ROSTER_OPEN) buildRoster();
-}
-function getAssignedTeams(){
-  const placed=new Set();
-  for(let i=1;i<=14;i++){const d=R['PRE_'+i];[0,1].forEach(si=>{if(d.slots[si].t==='team')placed.add(d.slots[si].idx);});}
-  return placed;
-}
-function buildRoster(){
-  const list=document.getElementById('roster-list'); if(!list)return;
-  list.innerHTML='';
-  const placed=getAssignedTeams();
-  let cnt=0;
-  for(let i=0;i<N;i++){
-    const isPlaced=placed.has(i); if(isPlaced)cnt++;
-    const item=document.createElement('div');
-    item.className='roster-item'+(isPlaced?' assigned':'');
-    item.dataset.tidx=i;
-    const num=document.createElement('span');num.className='roster-num';num.textContent=i+1;
-    const av=document.createElement('div');av.className='roster-av';av.style.background=avc(i);av.textContent=ini(S.teams[i]);
-    const nm=document.createElement('span');nm.className='roster-name';nm.textContent=S.teams[i];
-    item.addEventListener('click',()=>{
-      if(SELECTING&&!isPlaced){assignTeamToSlot(SELECTING.matchId,SELECTING.slotIdx,i);}
-      else if(!SELECTING&&IS_ADMIN&&!isPlaced){startRosterEdit(nm,i);}
-    });
-    item.appendChild(num);item.appendChild(av);item.appendChild(nm);
-    list.appendChild(item);
-  }
-  document.getElementById('roster-count').textContent=cnt+'/'+N;
-}
-function startRosterEdit(el,ti){
-  if(!IS_ADMIN)return;
-  el.setAttribute('contenteditable','true');el.focus();
-  const r=document.createRange();r.selectNodeContents(el);
-  const s=window.getSelection();s.removeAllRanges();s.addRange(r);
-  function done(){el.setAttribute('contenteditable','false');const v=el.textContent.trim();if(v){S.teams[ti]=v;scheduleSave();}else el.textContent=S.teams[ti];render();}
-  el.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();done();}if(e.key==='Escape'){el.setAttribute('contenteditable','false');el.textContent=S.teams[ti];}},{once:true});
-  el.addEventListener('blur',done,{once:true});
-}
-function startSelectForSlot(matchId,slotIdx){
-  SELECTING={matchId,slotIdx};
-  const el=document.getElementById('select-hint');
-  el.querySelector('#select-hint-text').textContent=matchId+' - Slot '+(slotIdx+1)+' uchun jamoa tanlang';
-  el.classList.add('show');
-  if(!ROSTER_OPEN){ROSTER_OPEN=true;document.getElementById('roster-panel').classList.remove('hidden');}
-  buildRoster();
-}
-function cancelSelect(){
-  SELECTING=null;
-  document.getElementById('select-hint').classList.remove('show');
-  buildRoster();
-}
-function assignTeamToSlot(matchId,slotIdx,teamIdx){
-  const def=R[matchId];if(!def)return;
-  // Remove same teamIdx from any other PRE slot
-  for(let i=1;i<=14;i++){const d=R['PRE_'+i];[0,1].forEach(si=>{if(d.slots[si].t==='team'&&d.slots[si].idx===teamIdx&&!(('PRE_'+i)===matchId&&si===slotIdx)){d.slots[si]={t:'empty'};}});}
-  def.slots[slotIdx]={t:'team',idx:teamIdx};
-  cascade(matchId);
-  if(!S.slots)S.slots={};
-  S.slots[matchId+'_'+slotIdx]=teamIdx;
-  SELECTING=null;
-  document.getElementById('select-hint').classList.remove('show');
-  scheduleSave();render();
-}
-function restoreSlots(){
-  if(!S.slots)return;
-  // Reset all PRE slots to empty first
-  for(let i=1;i<=14;i++){R['PRE_'+i].slots=[{t:'empty'},{t:'empty'}];}
-  Object.entries(S.slots).forEach(([key,teamIdx])=>{
-    const parts=key.split('_');
-    const si=parseInt(parts[parts.length-1]);
-    const mid=parts.slice(0,-1).join('_');
-    if(R[mid])R[mid].slots[si]={t:'team',idx:teamIdx};
-  });
-}
 init();
 </script>
 </body>
