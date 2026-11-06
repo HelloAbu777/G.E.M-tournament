@@ -769,7 +769,6 @@ function render(){
   br.appendChild(buildCol(['L_R16_1','L_R16_2','L_R16_3','L_R16_4','L_R16_5','L_R16_6','L_R16_7'],'L-1/16','L','lside'));
 
   updateStats();
-  tsBuild();
   requestAnimationFrame(()=>{
     const bodies=document.querySelectorAll('.col-body');
     let maxH=0; bodies.forEach(b=>{if(b.offsetHeight>maxH)maxH=b.offsetHeight;});
