@@ -356,6 +356,18 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--t
 ::-webkit-scrollbar{width:4px;height:4px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:rgba(255,255,255,.07);border-radius:99px}
+/* Team roster bar */
+#rbar{flex-shrink:0;background:rgba(6,8,14,.8);border-bottom:1px solid rgba(255,255,255,.07);padding:6px 16px;backdrop-filter:blur(12px)}
+#rbar-wrap{display:flex;flex-wrap:wrap;gap:4px;align-items:center}
+#rbar-hint{font-size:.6rem;color:#f0c84a;padding:2px 8px;border-radius:99px;border:1px solid rgba(245,200,67,.3);background:rgba(245,200,67,.08);display:none;align-items:center;gap:6px;margin-right:6px}
+#rbar-hint b{font-weight:700}#rbar-hint span{cursor:pointer;color:#7a90a4;margin-left:4px}
+.ri{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:6px;background:rgba(20,24,38,.9);border:1px solid rgba(255,255,255,.07);cursor:pointer;user-select:none;transition:all .12s}
+.ri:hover{background:rgba(200,215,230,.07);border-color:rgba(255,255,255,.14)}
+.ri.used{opacity:.25;pointer-events:none}.ri.pick{border-color:rgba(245,200,67,.5);background:rgba(245,200,67,.1)}
+.ri-n{font-size:.5rem;font-weight:700;color:#3a4862;min-width:12px}
+.ri-a{width:16px;height:16px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:.42rem;font-weight:800;color:#fff;flex-shrink:0}
+.ri-t{font-size:.65rem;font-weight:500;color:#e8f0f8;outline:none}
+#rbar-count{font-size:.58rem;color:#3a4862;margin-left:auto;flex-shrink:0}
 </style>
 </head>
 <body>
@@ -389,6 +401,13 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--t
   </div>
 </header>
 
+<!-- Team roster bar (setkadan tashqari, yuqorida) -->
+<div id="rbar">
+  <div id="rbar-wrap">
+    <div id="rbar-hint"><b id="rbar-hint-txt">Slotni tanlang</b><span onclick="rCancel()">✕</span></div>
+    <span id="rbar-count">0/28</span>
+  </div>
+</div>
 <div id="canvas"><div id="zoom-wrap"><div id="bracket"></div></div></div>
 
 <div class="stats">
