@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="uz">
 <head>
 <meta charset="UTF-8"/>
@@ -43,22 +43,22 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--t
   background-position: center top;
   background-repeat: no-repeat;
 }
-/* Dark overlay — rasmdagi sovuq kulrang toniga mos */
+/* Lighter overlay — bg image shows clearly */
 #bg::before{
   content:'';position:absolute;inset:0;
   background:
     linear-gradient(180deg,
-      rgba(18,22,28,0.82) 0%,
-      rgba(14,18,24,0.72) 40%,
-      rgba(18,22,28,0.85) 100%),
-    radial-gradient(ellipse 60% 50% at 50% 30%, rgba(100,80,50,.08) 0%, transparent 70%);
+      rgba(6,8,12,0.52) 0%,
+      rgba(6,8,12,0.38) 40%,
+      rgba(6,8,12,0.55) 100%);
+
 }
 #bg::after{
   content:'';position:absolute;inset:0;
   background-image:
-    linear-gradient(rgba(140,165,185,.022) 1px,transparent 1px),
-    linear-gradient(90deg,rgba(140,165,185,.022) 1px,transparent 1px);
-  background-size:38px 38px;
+    linear-gradient(rgba(200,215,230,.015) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(200,215,230,.015) 1px,transparent 1px);
+  background-size:44px 44px;
 }
 
 /* ─── Header ─── */
