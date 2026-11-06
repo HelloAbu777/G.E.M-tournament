@@ -356,26 +356,6 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--t
 ::-webkit-scrollbar{width:4px;height:4px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:rgba(255,255,255,.07);border-radius:99px}
-
-/* ─── Roster ─── */
-.app-body{display:flex;flex:1;overflow:hidden;min-height:0}
-#roster{width:168px;flex-shrink:0;background:rgba(6,8,14,0.75);border-right:1px solid var(--b);
-  backdrop-filter:blur(12px);display:flex;flex-direction:column;overflow:hidden}
-#roster .r-hdr{padding:8px 10px;border-bottom:1px solid var(--b);font-size:.62rem;font-weight:700;
-  letter-spacing:.8px;text-transform:uppercase;color:var(--txt2);display:flex;justify-content:space-between}
-#roster-list{flex:1;overflow-y:auto;padding:4px 6px}
-.ritem{display:flex;align-items:center;gap:6px;padding:5px 8px;border-radius:7px;
-  cursor:pointer;transition:background .12s;border:1px solid transparent;margin-bottom:1px}
-.ritem:hover{background:rgba(200,215,230,.06);border-color:var(--b)}
-.ritem.used{opacity:.3;pointer-events:none}
-.ritem.highlight{background:rgba(212,168,67,.12);border-color:rgba(212,168,67,.3)}
-.r-num{font-size:.5rem;font-weight:700;color:var(--txt3);width:14px;text-align:right;flex-shrink:0}
-.r-av{width:22px;height:22px;border-radius:5px;flex-shrink:0;display:flex;align-items:center;
-  justify-content:center;font-size:.48rem;font-weight:800;color:#fff}
-.r-nm{flex:1;font-size:.7rem;font-weight:500;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;outline:none}
-.r-nm[contenteditable=true]{background:rgba(140,185,215,.1);padding:1px 4px;caret-color:var(--sky);border-bottom:1px solid rgba(140,185,215,.4)}
-.r-hint{font-size:.58rem;color:var(--gold2);padding:4px 10px;border-bottom:1px solid rgba(212,168,67,.15);
-  background:rgba(212,168,67,.05);min-height:24px;display:flex;align-items:center}
 </style>
 </head>
 <body>
@@ -409,14 +389,7 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--t
   </div>
 </header>
 
-<div class="app-body">
-<div id="roster">
-  <div class="r-hdr"><span>Jamoalar</span><span id="r-count" style="color:var(--txt3)">0/28</span></div>
-  <div class="r-hint" id="r-hint"></div>
-  <div id="roster-list"></div>
-</div>
 <div id="canvas"><div id="zoom-wrap"><div id="bracket"></div></div></div>
-</div>
 
 <div class="stats">
   <div class="stat"><div class="sdot" style="background:var(--sky)"></div><span class="sl">Jami:</span><span class="sv" id="s-t">—</span></div>
@@ -1023,66 +996,6 @@ window.addEventListener('resize',()=>render());
   });
 })();
 
-/* ──────────────────────────────────────────────
-   ROSTER — 28 ta jamoa ro'yxati, chap panel
-   Ishlash tartibi:
-   1. PRE match dagi bo'sh slot bosiladi
-   2. Roster panelda sariq highlight paydo bo'ladi
-   3. Istalgan jamoaga bosiladi — u shu slotga joylashadi
-   4. Admin nomga bosib tahrirlaydi (inline)
-────────────────────────────────────────────── */
-let _rSlot=null;
-function rBuild(){
-  const list=document.getElementById('roster-list');if(!list)return;
-  list.innerHTML='';
-  const used=new Set();
-  for(let i=1;i<=14;i++){const d=R['PRE_'+i];[0,1].forEach(si=>{if(d.slots[si].t==='team')used.add(d.slots[si].idx);});}
-  let cnt=0;
-  for(let i=0;i<N;i++){
-    const isUsed=used.has(i);if(isUsed)cnt++;
-    const div=document.createElement('div');
-    div.className='ritem'+(isUsed?' used':'')+(_rSlot&&!isUsed?' highlight':'');
-    div.addEventListener('click',()=>{
-      if(!IS_ADMIN){openAuthModal();return;}
-      if(_rSlot&&!isUsed){rAssign(_rSlot.matchId,_rSlot.si,i);return;}
-      if(!isUsed)rEditName(div.querySelector('.r-nm'),i);
-    });
-    const num=document.createElement('span');num.className='r-num';num.textContent=i+1;
-    const av=document.createElement('div');av.className='r-av';av.style.background=avc(i);av.textContent=ini(S.teams[i]);
-    const nm=document.createElement('span');nm.className='r-nm';nm.textContent=S.teams[i];
-    div.appendChild(num);div.appendChild(av);div.appendChild(nm);
-    list.appendChild(div);
-  }
-  const hint=document.getElementById('r-hint');
-  if(_rSlot)hint.textContent=_rSlot.matchId+' slot '+(+_rSlot.si+1)+': tanlang';
-  else hint.textContent='';
-  document.getElementById('r-count').textContent=cnt+'/'+N;
-}
-function rAssign(matchId,si,teamIdx){
-  const def=R[matchId];if(!def)return;
-  for(let i=1;i<=14;i++){const d=R['PRE_'+i];[0,1].forEach(s=>{if(d.slots[s].t==='team'&&d.slots[s].idx===teamIdx)d.slots[s]={t:'empty'};});}
-  def.slots[si]={t:'team',idx:teamIdx};
-  cascade(matchId);
-  if(!S.slots)S.slots={};
-  S.slots[matchId+'_'+si]=teamIdx;
-  _rSlot=null;
-  scheduleSave();render();
-}
-function rEditName(el,ti){
-  if(!IS_ADMIN||!el)return;
-  el.setAttribute('contenteditable','true');el.focus();
-  const r=document.createRange();r.selectNodeContents(el);
-  const s=window.getSelection();s.removeAllRanges();s.addRange(r);
-  const done=()=>{el.setAttribute('contenteditable','false');const v=el.textContent.trim();if(v){S.teams[ti]=v;scheduleSave();}else el.textContent=S.teams[ti];render();};
-  el.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();done();}if(e.key==='Escape'){el.setAttribute('contenteditable','false');el.textContent=S.teams[ti];}},{once:true});
-  el.addEventListener('blur',done,{once:true});
-}
-function rPickSlot(matchId,si){if(!IS_ADMIN){openAuthModal();return;}_rSlot={matchId,si};rBuild();}
-function rRestoreSlots(){
-  if(!S.slots)return;
-  for(let i=1;i<=14;i++)R['PRE_'+i].slots=[{t:'empty'},{t:'empty'}];
-  Object.entries(S.slots).forEach(([k,v])=>{const p=k.split('_');const si=parseInt(p.pop());const mid=p.join('_');if(R[mid])R[mid].slots[si]={t:'team',idx:v};});
-}
 init();
 </script>
 </body>
