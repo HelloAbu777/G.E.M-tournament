@@ -5,5 +5,13 @@
     { "source": "/api/auth",    "destination": "/api/auth.js"   },
     { "source": "/api/reset",   "destination": "/api/reset.js"  },
     { "source": "/api/info",    "destination": "/api/info.js"   }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }
+      ]
+    }
   ]
 }
