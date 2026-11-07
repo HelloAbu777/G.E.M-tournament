@@ -741,6 +741,63 @@ function render(){
   autoBye();
   const br=document.getElementById('bracket'); br.innerHTML='';
 
+  /* ─ JAMOALAR USTUNI ─ */
+  (()=>{
+    const c=document.createElement('div');
+    c.style.cssText='display:flex;flex-direction:column;width:155px;flex-shrink:0;margin:0 10px 0 0;padding-right:10px;border-right:1px solid rgba(56,189,248,.15)';
+    // Header label
+    const lbl=document.createElement('div');
+    lbl.style.cssText='height:26px;margin-bottom:10px;display:flex;align-items:center;justify-content:center';
+    const sp=document.createElement('span');
+    sp.style.cssText='font-size:.56rem;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;padding:3px 11px;border-radius:99px;border:1px solid rgba(56,189,248,.22);background:rgba(56,189,248,.06);color:rgba(56,189,248,.85);white-space:nowrap';
+    sp.textContent='Jamoalar';
+    lbl.appendChild(sp); c.appendChild(lbl);
+    // Rows
+    const body=document.createElement('div');
+    body.style.cssText='display:flex;flex-direction:column;gap:2px';
+    for(let i=0;i<N;i++){
+      const row=document.createElement('div');
+      row.style.cssText='display:flex;align-items:center;gap:5px;padding:4px 5px;border-radius:6px;border:1px solid transparent;transition:background .12s';
+      if(IS_ADMIN){row.style.cursor='text';}
+      const n=document.createElement('span');
+      n.style.cssText='font-size:.5rem;font-weight:700;color:#3a4862;width:15px;text-align:right;flex-shrink:0';
+      n.textContent=i+1;
+      const a=document.createElement('div');
+      a.style.cssText='width:20px;height:20px;border-radius:5px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:.46rem;font-weight:800;color:#fff';
+      a.style.background=avc(i); a.textContent=ini(S.teams[i]);
+      const t=document.createElement('span');
+      t.style.cssText='flex:1;font-size:.68rem;font-weight:500;color:#dce8f0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;outline:none;border-radius:3px';
+      t.textContent=S.teams[i];
+      if(IS_ADMIN){
+        t.addEventListener('click',e=>{
+          e.stopPropagation();
+          t.contentEditable='true';
+          t.style.background='rgba(140,185,215,.1)';
+          t.style.padding='1px 4px';
+          t.focus();
+          const rng=document.createRange();rng.selectNodeContents(t);
+          const sel=window.getSelection();sel.removeAllRanges();sel.addRange(rng);
+          const done=()=>{
+            t.contentEditable='false';t.style.background='';t.style.padding='';
+            const v=t.textContent.trim();
+            if(v){S.teams[i]=v;scheduleSave();}else t.textContent=S.teams[i];
+          };
+          t.addEventListener('keydown',ev=>{
+            if(ev.key==='Enter'){ev.preventDefault();done();}
+            if(ev.key==='Escape'){t.contentEditable='false';t.style.background='';t.style.padding='';t.textContent=S.teams[i];}
+          },{once:true});
+          t.addEventListener('blur',done,{once:true});
+        });
+      }
+      row.appendChild(n);row.appendChild(a);row.appendChild(t);
+      body.appendChild(row);
+    }
+    c.appendChild(body);
+    br.appendChild(c);
+    br.appendChild(Object.assign(document.createElement('div'),{className:'dv'}));
+  })();
+  /* ─ END JAMOALAR ─ */
+
   br.appendChild(buildCol(
     ['PRE_1','PRE_2','PRE_3','PRE_4','PRE_5','PRE_6','PRE_7',
      'PRE_8','PRE_9','PRE_10','PRE_11','PRE_12','PRE_13','PRE_14'],
