@@ -651,18 +651,31 @@ function startEdit(el,ti,ev){
   el.setAttribute('contenteditable','true'); el.focus();
   const r=document.createRange(); r.selectNodeContents(el);
   const s=window.getSelection(); s.removeAllRanges(); s.addRange(r);
+  const isTouch=('ontouchstart' in window)||navigator.maxTouchPoints>0;
+  const tb=document.getElementById('edit-toolbar');
+  if(isTouch&&tb){
+    tb.style.display='flex';
+    tb.querySelector('.etb-save').onclick=done;
+    tb.querySelector('.etb-cancel').onclick=cancel;
+  }
   function done(){
-    if(!_ed) return; _ed=false;
+    if(!_ed)return; _ed=false;
     el.setAttribute('contenteditable','false');
     const v=el.textContent.trim();
-    if(v){ S.teams[ti]=v; scheduleSave(); } else { el.textContent=S.teams[ti]; }
+    if(v){S.teams[ti]=v;scheduleSave();}else el.textContent=S.teams[ti];
+    if(tb)tb.style.display='none';
     render();
+  }
+  function cancel(){
+    _ed=false; el.setAttribute('contenteditable','false');
+    el.textContent=S.teams[ti];
+    if(tb)tb.style.display='none';
   }
   el.addEventListener('keydown',e=>{
     if(e.key==='Enter'){e.preventDefault();done();}
-    if(e.key==='Escape'){_ed=false;el.setAttribute('contenteditable','false');el.textContent=S.teams[ti];}
+    if(e.key==='Escape'){cancel();}
   },{once:true});
-  el.addEventListener('blur',done,{once:true});
+  if(!isTouch){el.addEventListener('blur',done,{once:true});}
 }
 
 /* =======================================================================
